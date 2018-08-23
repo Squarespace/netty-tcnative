@@ -277,7 +277,7 @@ AC_DEFUN([TCN_HELP_STRING],[ifelse(regexp(AC_ACVERSION, 2\.1), -1, AC_HELP_STRIN
 
 dnl
 dnl TCN_CHECK_STATIC
-dnl Will prepare more LDFLAGS that should be set to ensure we not export any functions from the static compiled APR / OpenSSL libs.
+dnl Will prepare more LDFLAGS that should be set to ensure we do not export any functions from the static compiled APR / OpenSSL libs.
 dnl
 AC_DEFUN([TCN_CHECK_STATIC],[
     LD_FLAGS_STATIC=""

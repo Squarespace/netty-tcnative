@@ -74,6 +74,14 @@ final class NativeStaticallyReferencedJniMethods {
     static native int sslMaxPlaintextLength();
     static native int sslMaxRecordLength();
 
+    // TLS 1.3+ Early Data status codes
+    static native int sslReadEarlyDataError();
+    static native int sslReadEarlyDataSuccess();
+    static native int sslReadEarlyDataFinish();
+    static native int sslEarlyDataAccepted();
+    static native int sslEarlyDataRejected();
+    static native int sslEarlyDataNotSent();
+
     static native int x509CheckFlagAlwaysCheckSubject();
     static native int x509CheckFlagDisableWildCards();
     static native int x509CheckFlagNoPartialWildCards();

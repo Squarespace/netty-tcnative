@@ -107,6 +107,14 @@ public final class SSL {
     public static final int X509_CHECK_FLAG_NO_PARTIAL_WILD_CARDS = x509CheckFlagNoPartialWildCards();
     public static final int X509_CHECK_FLAG_MULTI_LABEL_WILDCARDS = x509CheckFlagMultiLabelWildCards();
 
+    // https://www.openssl.org/docs/man1.1.1/man3/SSL_read_early_data.html
+    public static final int SSL_READ_EARLY_DATA_ERROR = sslReadEarlyDataError();
+    public static final int SSL_READ_EARLY_DATA_SUCCESS = sslReadEarlyDataSuccess();
+    public static final int SSL_READ_EARLY_DATA_FINISH = sslReadEarlyDataFinish();
+    public static final int SSL_EARLY_DATA_ACCEPTED = sslEarlyDataAccepted();
+    public static final int SSL_EARLY_DATA_REJECTED = sslEarlyDataRejected();
+    public static final int SSL_EARLY_DATA_NOT_SENT = sslEarlyDataNotSent();
+    
     /* Return OpenSSL version number */
     public static native int version();
 
@@ -270,6 +278,23 @@ public final class SSL {
      * @return the number of read bytes
      */
     public static native int readFromSSL(long ssl, long rbuf, int rlen);
+    
+    /**
+     * 
+     */
+    public static native int writeEarlyDataToSSL(long ssl, long wbuf, int wlen);
+    
+    /**
+     * 
+     */
+    public static native int readEarlyDataFromSSL(long ssl, long rbuf, int rlen);
+    
+    /**
+     * @see #SSL_EARLY_DATA_ACCEPTED
+     * @see #SSL_EARLY_DATA_REJECTED
+     * @see #SSL_EARLY_DATA_NOT_SENT
+     */
+    public static native int getEarlyDataStatus(long ssl);
 
     /**
      * SSL_get_shutdown

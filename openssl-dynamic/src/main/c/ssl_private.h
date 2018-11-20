@@ -239,6 +239,9 @@ struct tcn_ssl_ctxt_t {
     jobject                  sni_hostname_matcher;
     jmethodID                sni_hostname_matcher_method;
 
+    jobject                  allow_early_data_callback;
+    jmethodID                allow_early_data_callback_method;
+
     tcn_ssl_verify_config_t  verify_config;
 
     int                      protocol;

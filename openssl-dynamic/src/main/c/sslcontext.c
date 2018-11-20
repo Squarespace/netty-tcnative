@@ -77,6 +77,13 @@ static apr_status_t ssl_context_cleanup(void *data)
         }
         c->sni_hostname_matcher_method = NULL;
 
+        if (c->allow_early_data_callback != NULL) {
+            tcn_get_java_env(&e);
+            (*e)->DeleteGlobalRef(e, c->allow_early_data_callback);
+            c->allow_early_data_callback = NULL;
+        }
+        c->allow_early_data_callback_method = NULL;
+
         if (c->next_proto_data != NULL) {
             OPENSSL_free(c->next_proto_data);
             c->next_proto_data = NULL;
@@ -1317,6 +1324,99 @@ TCN_IMPLEMENT_CALL(void, SSLContext, setSessionTicketKeys0)(TCN_STDARGS, jlong c
     SSL_CTX_set_tlsext_ticket_key_cb(c->ctx, ssl_tlsext_ticket_key_cb);
 }
 
+TCN_IMPLEMENT_CALL(jboolean, SSLContext, setMaxEarlyData)(TCN_STDARGS, jlong ctx, jlong maxEarlyData)
+{
+    tcn_ssl_ctxt_t *c = J2P(ctx, tcn_ssl_ctxt_t *);
+
+    TCN_CHECK_NULL(c, ctx, JNI_FALSE);
+
+    UNREFERENCED_STDARGS;
+
+    return  SSL_CTX_set_max_early_data(c->ctx, (uint32_t) maxEarlyData) == 1 ? JNI_TRUE : JNI_FALSE;
+}
+
+TCN_IMPLEMENT_CALL(jlong, SSLContext, getMaxEarlyData)(TCN_STDARGS, jlong ctx)
+{
+    tcn_ssl_ctxt_t *c = J2P(ctx, tcn_ssl_ctxt_t *);
+
+    TCN_CHECK_NULL(c, ctx, (jlong) 0L);
+
+    UNREFERENCED_STDARGS;
+
+    return (jlong) SSL_CTX_get_max_early_data(c->ctx);
+}
+
+TCN_IMPLEMENT_CALL(jboolean, SSLContext, setRecvMaxEarlyData)(TCN_STDARGS, jlong ctx, jlong maxEarlyData)
+{
+    tcn_ssl_ctxt_t *c = J2P(ctx, tcn_ssl_ctxt_t *);
+
+    TCN_CHECK_NULL(c, ctx, JNI_FALSE);
+
+    UNREFERENCED_STDARGS;
+
+    return  SSL_CTX_set_recv_max_early_data(c->ctx, (uint32_t) maxEarlyData) == 1 ? JNI_TRUE : JNI_FALSE;
+}
+
+TCN_IMPLEMENT_CALL(jlong, SSLContext, getRecvMaxEarlyData)(TCN_STDARGS, jlong ctx)
+{
+    tcn_ssl_ctxt_t *c = J2P(ctx, tcn_ssl_ctxt_t *);
+
+    TCN_CHECK_NULL(c, ctx, (jlong) 0L);
+
+    UNREFERENCED_STDARGS;
+
+    return (jlong) SSL_CTX_get_recv_max_early_data(c->ctx);
+}
+
+static int allow_early_data_callback(SSL *ssl, void *arg)
+{
+    tcn_ssl_ctxt_t *c = (tcn_ssl_ctxt_t *) arg;
+
+    JNIEnv *e;
+    tcn_get_java_env(&e);
+
+    jobject callback = c->allow_early_data_callback;
+    jmethodID method = c->allow_early_data_callback_method;
+    jboolean result = JNI_FALSE;
+
+    if (callback != NULL && method != NULL) {
+        result = (*e)->CallBooleanMethod(e, callback, method, P2J(ssl));
+    }
+
+    return (result == JNI_TRUE) ? 1 : 0;
+}
+
+TCN_IMPLEMENT_CALL(void, SSLContext, setAllowEarlyDataCallback)(TCN_STDARGS, jlong ctx, jobject callback)
+{
+    tcn_ssl_ctxt_t *c = J2P(ctx, tcn_ssl_ctxt_t *);
+
+    TCN_CHECK_NULL(c, ctx, /* void */);
+
+    if (callback == NULL) {
+        if (c->allow_early_data_callback != NULL) {
+            SSL_CTX_set_allow_early_data_cb(c->ctx, NULL, NULL);
+
+            (*e)->DeleteGlobalRef(e, c->allow_early_data_callback);
+
+            c->allow_early_data_callback = NULL;
+            c->allow_early_data_callback_method = NULL;
+        }
+        return;
+    }
+
+    jclass clazz = (*e)->GetObjectClass(e, callback);
+    jmethodID method = (*e)->GetMethodID(e, clazz, "allow", "(J)B");
+
+    if (c->allow_early_data_callback != NULL) {
+        (*e)->DeleteGlobalRef(e, c->allow_early_data_callback);
+    }
+
+    c->allow_early_data_callback = (*e)->NewGlobalRef(e, callback);
+    c->allow_early_data_callback_method = method;
+
+    SSL_CTX_set_allow_early_data_cb(c->ctx, allow_early_data_callback, (void *) c);
+}
+
 static const char* authentication_method(const SSL* ssl) {
 {
     const STACK_OF(SSL_CIPHER) *ciphers = NULL;
@@ -1936,6 +2036,11 @@ static const JNINativeMethod fixed_method_table[] = {
   { TCN_METHOD_TABLE_ENTRY(sessionTicketKeyRenew, (J)J, SSLContext) },
   { TCN_METHOD_TABLE_ENTRY(sessionTicketKeyFail, (J)J, SSLContext) },
   { TCN_METHOD_TABLE_ENTRY(setSessionTicketKeys0, (J[B)V, SSLContext) },
+  { TCN_METHOD_TABLE_ENTRY(setMaxEarlyData, (JJ)Z, SSLContext) },
+  { TCN_METHOD_TABLE_ENTRY(getMaxEarlyData, (J)J, SSLContext) },
+  { TCN_METHOD_TABLE_ENTRY(setRecvMaxEarlyData, (JJ)Z, SSLContext) },
+  { TCN_METHOD_TABLE_ENTRY(getRecvMaxEarlyData, (J)J, SSLContext) },
+  { TCN_METHOD_TABLE_ENTRY(setAllowEarlyDataCallback, (JLio/netty/internal/tcnative/AllowEarlyDataCallback;)V, SSLContext) },
 
   // setCertVerifyCallback -> needs dynamic method table
   // setCertRequestedCallback -> needs dynamic method table

@@ -443,6 +443,31 @@ public final class SSLContext {
     private static native void setSessionTicketKeys0(long ctx, byte[] keys);
 
     /**
+     * 
+     */
+    public static native boolean setMaxEarlyData(long ctx, long maxEarlyData);
+
+    /**
+     * 
+     */
+    public static native long getMaxEarlyData(long ctx);
+    
+    /**
+     * 
+     */
+    public static native boolean setRecvMaxEarlyData(long ctx, long maxEarlyData);
+
+    /**
+     * 
+     */
+    public static native long getRecvMaxEarlyData(long ctx);
+    
+    /**
+     * 
+     */
+    public static native void setAllowEarlyDataCallback(long ctx, AllowEarlyDataCallback callback);
+    
+    /**
      * Set concatenated PEM-encoded CA Certificates for Client Auth
      * <br>
      * This directive sets the all-in-one BIO where you can assemble the

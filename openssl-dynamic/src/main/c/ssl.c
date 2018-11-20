@@ -1044,7 +1044,7 @@ TCN_IMPLEMENT_CALL(jint /* status */, SSL, readFromSSL)(TCN_STDARGS,
 }
 
 //
-TCN_IMPLEMENT_CALL(jint /* status */, SSL, writeEarlyDataToSSL)(TCN_STDARGS,
+TCN_IMPLEMENT_CALL(jlong /* status | written */, SSL, writeEarlyDataToSSL)(TCN_STDARGS,
                                                         jlong ssl /* SSL * */,
                                                         jlong wbuf /* char * */,
                                                         jint wlen /* sizeof(wbuf) - 1 */) {
@@ -1057,11 +1057,12 @@ TCN_IMPLEMENT_CALL(jint /* status */, SSL, writeEarlyDataToSSL)(TCN_STDARGS,
 
     UNREFERENCED_STDARGS;
 
-    return SSL_write_early_data(ssl_, w, wlen, &written);
+    jlong status = (jlong) SSL_write_early_data(ssl_, w, wlen, &written);
+    return (status << 32) | written;
 }
 
 //
-TCN_IMPLEMENT_CALL(jint /* status */, SSL, readEarlyDataFromSSL)(TCN_STDARGS,
+TCN_IMPLEMENT_CALL(jlong /* status | readbytes */, SSL, readEarlyDataFromSSL)(TCN_STDARGS,
                                                         jlong ssl /* SSL * */,
                                                         jlong rbuf /* char * */,
                                                         jint rlen /* sizeof(rbuf) - 1 */) {
@@ -1074,7 +1075,8 @@ TCN_IMPLEMENT_CALL(jint /* status */, SSL, readEarlyDataFromSSL)(TCN_STDARGS,
 
     UNREFERENCED_STDARGS;
 
-    return SSL_read_early_data(ssl_, r, rlen, &readbytes);
+    jlong status = (jlong) SSL_read_early_data(ssl_, r, rlen, &readbytes);
+    return (status << 32) | readbytes;
 }
 
 //
@@ -2375,8 +2377,8 @@ static const JNINativeMethod method_table[] = {
   { TCN_METHOD_TABLE_ENTRY(sslPending, (J)I, SSL) },
   { TCN_METHOD_TABLE_ENTRY(writeToSSL, (JJI)I, SSL) },
   { TCN_METHOD_TABLE_ENTRY(readFromSSL, (JJI)I, SSL) },
-  { TCN_METHOD_TABLE_ENTRY(writeEarlyDataToSSL, (JJI)I, SSL) },
-  { TCN_METHOD_TABLE_ENTRY(readEarlyDataFromSSL, (JJI)I, SSL) },
+  { TCN_METHOD_TABLE_ENTRY(writeEarlyDataToSSL, (JJI)J, SSL) },
+  { TCN_METHOD_TABLE_ENTRY(readEarlyDataFromSSL, (JJI)J, SSL) },
   { TCN_METHOD_TABLE_ENTRY(getEarlyDataStatus, (J)I, SSL) },
   { TCN_METHOD_TABLE_ENTRY(getShutdown, (J)I, SSL) },
   { TCN_METHOD_TABLE_ENTRY(setShutdown, (JI)V, SSL) },

@@ -282,12 +282,12 @@ public final class SSL {
     /**
      * 
      */
-    public static native int writeEarlyDataToSSL(long ssl, long wbuf, int wlen);
+    public static native long writeEarlyDataToSSL(long ssl, long wbuf, int wlen);
     
     /**
      * 
      */
-    public static native int readEarlyDataFromSSL(long ssl, long rbuf, int rlen);
+    public static native long readEarlyDataFromSSL(long ssl, long rbuf, int rlen);
     
     /**
      * @see #SSL_EARLY_DATA_ACCEPTED

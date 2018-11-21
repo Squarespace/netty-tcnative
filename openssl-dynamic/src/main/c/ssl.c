@@ -1058,7 +1058,7 @@ TCN_IMPLEMENT_CALL(jlong /* status | written */, SSL, writeEarlyDataToSSL)(TCN_S
     UNREFERENCED_STDARGS;
 
     jlong status = (jlong) SSL_write_early_data(ssl_, w, wlen, &written);
-    return (status << 32) | written;
+    return (status << 32L) | (jlong) written;
 }
 
 //
@@ -1076,7 +1076,7 @@ TCN_IMPLEMENT_CALL(jlong /* status | readbytes */, SSL, readEarlyDataFromSSL)(TC
     UNREFERENCED_STDARGS;
 
     jlong status = (jlong) SSL_read_early_data(ssl_, r, rlen, &readbytes);
-    return (status << 32) | readbytes;
+    return (status << 32L) | (jlong) readbytes;
 }
 
 //

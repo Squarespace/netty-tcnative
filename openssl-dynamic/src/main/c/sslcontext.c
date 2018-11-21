@@ -1405,7 +1405,7 @@ TCN_IMPLEMENT_CALL(void, SSLContext, setAllowEarlyDataCallback)(TCN_STDARGS, jlo
     }
 
     jclass clazz = (*e)->GetObjectClass(e, callback);
-    jmethodID method = (*e)->GetMethodID(e, clazz, "allow", "(J)B");
+    jmethodID method = (*e)->GetMethodID(e, clazz, "allow", "(J)Z");
 
     if (c->allow_early_data_callback != NULL) {
         (*e)->DeleteGlobalRef(e, c->allow_early_data_callback);

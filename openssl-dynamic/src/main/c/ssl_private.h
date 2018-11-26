@@ -239,8 +239,10 @@ struct tcn_ssl_ctxt_t {
     jobject                  sni_hostname_matcher;
     jmethodID                sni_hostname_matcher_method;
 
+#if !defined(OPENSSL_NO_TLS1_3) && !defined(OPENSSL_IS_BORINGSSL)
     jobject                  allow_early_data_callback;
     jmethodID                allow_early_data_callback_method;
+#endif // OPENSSL_NO_TLS1_3
 
     tcn_ssl_verify_config_t  verify_config;
 

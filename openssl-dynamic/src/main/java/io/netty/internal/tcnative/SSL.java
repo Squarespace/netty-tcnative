@@ -115,6 +115,9 @@ public final class SSL {
     public static final int SSL_EARLY_DATA_REJECTED = sslEarlyDataRejected();
     public static final int SSL_EARLY_DATA_NOT_SENT = sslEarlyDataNotSent();
     
+    // https://github.com/google/boringssl/blob/9113e0996fd445ce187ae9dfeabfc95805b947a2/include/openssl/ssl.h#L527
+    public static final int SSL_ERROR_EARLY_DATA_REJECTED = sslErrorEarlyDataRejected();
+    
     /* Return OpenSSL version number */
     public static native int version();
 
@@ -280,21 +283,68 @@ public final class SSL {
     public static native int readFromSSL(long ssl, long rbuf, int rlen);
     
     /**
+     * SSL_write_early_data. The {@link #earlyDataStatus(long)} is either {@code 1} (success) or {@code 0} (error).
+     * Upon an error please call {@link #getError(long, int)} to determine the correct course of action.
      * 
+     * @param ssl the SSL instance (SSL *)
+     * @param wbuf the memory address of the buffer
+     * @param wlen the length
+     * @return the number of written bytes (lower 32 bits) and the status code (upper 32 bits)
      */
     public static native long writeEarlyDataToSSL(long ssl, long wbuf, int wlen);
     
     /**
-     * 
+     * SSL_read_early_data. The {@link #earlyDataStatus(long)} is either {@link #SSL_READ_EARLY_DATA_ERROR},
+     * or {@link #SSL_READ_EARLY_DATA_SUCCESS}, or {@link #SSL_READ_EARLY_DATA_FINISH}.
+     *
+     * @param ssl the SSL instance (SSL *)
+     * @param rbuf the memory address of the buffer
+     * @param rlen the length
+     * @return the number of read bytes (lower 32 bits) and the status code (upper 32 bits)
      */
     public static native long readEarlyDataFromSSL(long ssl, long rbuf, int rlen);
     
     /**
+     * Returns {@code true} if the handshake has progressed enough to send or receive early data.
+     * 
+     * https://github.com/google/boringssl/blob/9113e0996fd445ce187ae9dfeabfc95805b947a2/include/openssl/ssl.h#L3217
+     */
+    public static native boolean isInEarlyData(long ssl);
+    
+    /**
+     * Resets the SSL connection's state upon receiving a {@link #SSL_EARLY_DATA_REJECTED} signal
+     * @see #getEarlyDataStatus(long)
+     */
+    public static native void resetRejectedEarlyData(long ssl);
+    
+    /**
+     * SSL_get_early_data_status
+     *
      * @see #SSL_EARLY_DATA_ACCEPTED
      * @see #SSL_EARLY_DATA_REJECTED
      * @see #SSL_EARLY_DATA_NOT_SENT
      */
     public static native int getEarlyDataStatus(long ssl);
+
+    /**
+     * Returns the upper 32 bits (status) of the argument.
+     *
+     * @see #writeEarlyDataToSSL(long, long, int)
+     * @see #readEarlyDataFromSSL(long, long, int)
+     */
+    public static int earlyDataStatus(long statusLength) {
+        return (int)(statusLength >> 32L);
+    }
+
+    /**
+     * Returns the lower 32 bits (length) of the argument.
+     *
+     * @see #writeEarlyDataToSSL(long, long, int)
+     * @see #readEarlyDataFromSSL(long, long, int)
+     */
+    public static int earlyDataLength(long statusLength) {
+        return (int)(statusLength & Integer.MAX_VALUE);
+    }
 
     /**
      * SSL_get_shutdown

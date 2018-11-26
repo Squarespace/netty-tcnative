@@ -1332,7 +1332,16 @@ TCN_IMPLEMENT_CALL(jboolean, SSLContext, setMaxEarlyData)(TCN_STDARGS, jlong ctx
 
     UNREFERENCED_STDARGS;
 
+#ifndef OPENSSL_NO_TLS1_3
+#ifdef OPENSSL_IS_BORINGSSL
+    SSL_CTX_set_early_data_enabled(c_ctx, (maxEarlyData > 0L) ? 1 : 0);
+    return JNI_TRUE;
+#else
     return  SSL_CTX_set_max_early_data(c->ctx, (uint32_t) maxEarlyData) == 1 ? JNI_TRUE : JNI_FALSE;
+#endif
+#else
+    return JNI_FALSE;
+#endif // OPENSSL_NO_TLS1_3
 }
 
 TCN_IMPLEMENT_CALL(jlong, SSLContext, getMaxEarlyData)(TCN_STDARGS, jlong ctx)
@@ -1343,7 +1352,11 @@ TCN_IMPLEMENT_CALL(jlong, SSLContext, getMaxEarlyData)(TCN_STDARGS, jlong ctx)
 
     UNREFERENCED_STDARGS;
 
+#if !defined(OPENSSL_NO_TLS1_3) && !defined(OPENSSL_IS_BORINGSSL)
     return (jlong) SSL_CTX_get_max_early_data(c->ctx);
+#else
+    return 0L;
+#endif // OPENSSL_NO_TLS1_3
 }
 
 TCN_IMPLEMENT_CALL(jboolean, SSLContext, setRecvMaxEarlyData)(TCN_STDARGS, jlong ctx, jlong maxEarlyData)
@@ -1354,7 +1367,11 @@ TCN_IMPLEMENT_CALL(jboolean, SSLContext, setRecvMaxEarlyData)(TCN_STDARGS, jlong
 
     UNREFERENCED_STDARGS;
 
+#if !defined(OPENSSL_NO_TLS1_3) && !defined(OPENSSL_IS_BORINGSSL)
     return  SSL_CTX_set_recv_max_early_data(c->ctx, (uint32_t) maxEarlyData) == 1 ? JNI_TRUE : JNI_FALSE;
+#else
+    return JNI_FALSE;
+#endif // OPENSSL_NO_TLS1_3
 }
 
 TCN_IMPLEMENT_CALL(jlong, SSLContext, getRecvMaxEarlyData)(TCN_STDARGS, jlong ctx)
@@ -1365,9 +1382,14 @@ TCN_IMPLEMENT_CALL(jlong, SSLContext, getRecvMaxEarlyData)(TCN_STDARGS, jlong ct
 
     UNREFERENCED_STDARGS;
 
+#if !defined(OPENSSL_NO_TLS1_3) && !defined(OPENSSL_IS_BORINGSSL)
     return (jlong) SSL_CTX_get_recv_max_early_data(c->ctx);
+#else
+    return 0L;
+#endif // OPENSSL_NO_TLS1_3
 }
 
+#if !defined(OPENSSL_NO_TLS1_3) && !defined(OPENSSL_IS_BORINGSSL)
 static int allow_early_data_callback(SSL *ssl, void *arg)
 {
     tcn_ssl_ctxt_t *c = (tcn_ssl_ctxt_t *) arg;
@@ -1386,12 +1408,15 @@ static int allow_early_data_callback(SSL *ssl, void *arg)
     return (result == JNI_TRUE) ? 1 : 0;
 }
 
-TCN_IMPLEMENT_CALL(void, SSLContext, setAllowEarlyDataCallback)(TCN_STDARGS, jlong ctx, jobject callback)
+#endif // OPENSSL_NO_TLS1_3
+
+TCN_IMPLEMENT_CALL(jboolean, SSLContext, setAllowEarlyDataCallback)(TCN_STDARGS, jlong ctx, jobject callback)
 {
     tcn_ssl_ctxt_t *c = J2P(ctx, tcn_ssl_ctxt_t *);
 
-    TCN_CHECK_NULL(c, ctx, /* void */);
+    TCN_CHECK_NULL(c, ctx, JNI_FALSE);
 
+#if !defined(OPENSSL_NO_TLS1_3) && !defined(OPENSSL_IS_BORINGSSL)
     if (callback == NULL) {
         if (c->allow_early_data_callback != NULL) {
             SSL_CTX_set_allow_early_data_cb(c->ctx, NULL, NULL);
@@ -1415,6 +1440,10 @@ TCN_IMPLEMENT_CALL(void, SSLContext, setAllowEarlyDataCallback)(TCN_STDARGS, jlo
     c->allow_early_data_callback_method = method;
 
     SSL_CTX_set_allow_early_data_cb(c->ctx, allow_early_data_callback, (void *) c);
+    return JNI_TRUE;
+#else
+    return JNI_FALSE;
+#endif // OPENSSL_NO_TLS1_3
 }
 
 static const char* authentication_method(const SSL* ssl) {
@@ -2040,7 +2069,7 @@ static const JNINativeMethod fixed_method_table[] = {
   { TCN_METHOD_TABLE_ENTRY(getMaxEarlyData, (J)J, SSLContext) },
   { TCN_METHOD_TABLE_ENTRY(setRecvMaxEarlyData, (JJ)Z, SSLContext) },
   { TCN_METHOD_TABLE_ENTRY(getRecvMaxEarlyData, (J)J, SSLContext) },
-  { TCN_METHOD_TABLE_ENTRY(setAllowEarlyDataCallback, (JLio/netty/internal/tcnative/AllowEarlyDataCallback;)V, SSLContext) },
+  { TCN_METHOD_TABLE_ENTRY(setAllowEarlyDataCallback, (JLio/netty/internal/tcnative/AllowEarlyDataCallback;)Z, SSLContext) },
 
   // setCertVerifyCallback -> needs dynamic method table
   // setCertRequestedCallback -> needs dynamic method table

@@ -137,33 +137,59 @@ TCN_IMPLEMENT_CALL(jint, NativeStaticallyReferencedJniMethods, sslMaxRecordLengt
 }
 
 TCN_IMPLEMENT_CALL(jint, NativeStaticallyReferencedJniMethods, sslReadEarlyDataError)(TCN_STDARGS) {
-    // TODO: ifndef
+#ifdef SSL_READ_EARLY_DATA_ERROR
     return SSL_READ_EARLY_DATA_ERROR;
+#else
+    return 0;
+#endif // SSL_READ_EARLY_DATA_ERROR
 }
 
 TCN_IMPLEMENT_CALL(jint, NativeStaticallyReferencedJniMethods, sslReadEarlyDataSuccess)(TCN_STDARGS) {
-    // TODO: ifndef
+#ifdef SSL_READ_EARLY_DATA_SUCCESS
     return SSL_READ_EARLY_DATA_SUCCESS;
+#else
+    return 0;
+#endif // SSL_READ_EARLY_DATA_SUCCESS
 }
 
 TCN_IMPLEMENT_CALL(jint, NativeStaticallyReferencedJniMethods, sslReadEarlyDataFinish)(TCN_STDARGS) {
-    // TODO: ifndef
+#ifdef SSL_READ_EARLY_DATA_FINISH
     return SSL_READ_EARLY_DATA_FINISH;
+#else
+    return 0;
+#endif // SSL_READ_EARLY_DATA_FINISH
 }
 
 TCN_IMPLEMENT_CALL(jint, NativeStaticallyReferencedJniMethods, sslEarlyDataAccepted)(TCN_STDARGS) {
-    // TODO: ifndef
+#ifdef SSL_EARLY_DATA_ACCEPTED
     return SSL_EARLY_DATA_ACCEPTED;
+#else
+    return 0;
+#endif // SSL_EARLY_DATA_ACCEPTED
 }
 
 TCN_IMPLEMENT_CALL(jint, NativeStaticallyReferencedJniMethods, sslEarlyDataRejected)(TCN_STDARGS) {
-    // TODO: ifndef
+#ifdef SSL_EARLY_DATA_REJECTED
     return SSL_EARLY_DATA_REJECTED;
+#else
+    return 0;
+#endif // SSL_EARLY_DATA_REJECTED
 }
 
 TCN_IMPLEMENT_CALL(jint, NativeStaticallyReferencedJniMethods, sslEarlyDataNotSent)(TCN_STDARGS) {
-    // TODO: ifndef
+#ifdef SSL_EARLY_DATA_NOT_SENT
     return SSL_EARLY_DATA_NOT_SENT;
+#else
+    return 0;
+#endif // SSL_EARLY_DATA_NOT_SENT
+}
+
+TCN_IMPLEMENT_CALL(jint, NativeStaticallyReferencedJniMethods, sslErrorEarlyDataRejected)(TCN_STDARGS) {
+#ifdef SSL_ERROR_EARLY_DATA_REJECTED
+    return SSL_ERROR_EARLY_DATA_REJECTED;
+#else
+    return 0;
+#endif // SSL_ERROR_EARLY_DATA_REJECTED
 }
 
 TCN_IMPLEMENT_CALL(jint, NativeStaticallyReferencedJniMethods, x509CheckFlagAlwaysCheckSubject)(TCN_STDARGS) {
@@ -547,6 +573,9 @@ static const JNINativeMethod method_table[] = {
   { TCN_METHOD_TABLE_ENTRY(sslEarlyDataAccepted, ()I, NativeStaticallyReferencedJniMethods) },
   { TCN_METHOD_TABLE_ENTRY(sslEarlyDataRejected, ()I, NativeStaticallyReferencedJniMethods) },
   { TCN_METHOD_TABLE_ENTRY(sslEarlyDataNotSent, ()I, NativeStaticallyReferencedJniMethods) },
+
+  { TCN_METHOD_TABLE_ENTRY(sslErrorEarlyDataRejected, ()I, NativeStaticallyReferencedJniMethods) },
+
   { TCN_METHOD_TABLE_ENTRY(x509CheckFlagAlwaysCheckSubject, ()I, NativeStaticallyReferencedJniMethods) },
   { TCN_METHOD_TABLE_ENTRY(x509CheckFlagDisableWildCards, ()I, NativeStaticallyReferencedJniMethods) },
   { TCN_METHOD_TABLE_ENTRY(x509CheckFlagNoPartialWildCards, ()I, NativeStaticallyReferencedJniMethods) },

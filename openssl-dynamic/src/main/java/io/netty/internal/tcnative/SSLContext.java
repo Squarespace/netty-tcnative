@@ -443,29 +443,29 @@ public final class SSLContext {
     private static native void setSessionTicketKeys0(long ctx, byte[] keys);
 
     /**
-     * 
+     * Sets the SSL_CTX_set_max_early_data and returns {@code true} on success.
      */
     public static native boolean setMaxEarlyData(long ctx, long maxEarlyData);
 
     /**
-     * 
+     * Returns the SSL_CTX_get_max_early_data.
      */
     public static native long getMaxEarlyData(long ctx);
     
     /**
-     * 
+     * Sets the SSL_CTX_set_recv_max_early_data and returns {@code true} on success.
      */
     public static native boolean setRecvMaxEarlyData(long ctx, long maxEarlyData);
 
     /**
-     * 
+     * Returns the SSL_CTX_get_recv_max_early_data
      */
     public static native long getRecvMaxEarlyData(long ctx);
     
     /**
-     * 
+     * Sets the SSL_CTX_set_allow_early_data_cb callback.
      */
-    public static native void setAllowEarlyDataCallback(long ctx, AllowEarlyDataCallback callback);
+    public static native boolean setAllowEarlyDataCallback(long ctx, AllowEarlyDataCallback callback);
     
     /**
      * Set concatenated PEM-encoded CA Certificates for Client Auth

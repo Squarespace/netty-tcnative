@@ -81,7 +81,8 @@ final class NativeStaticallyReferencedJniMethods {
     static native int sslEarlyDataAccepted();
     static native int sslEarlyDataRejected();
     static native int sslEarlyDataNotSent();
-
+    static native int sslErrorEarlyDataRejected();
+    
     static native int x509CheckFlagAlwaysCheckSubject();
     static native int x509CheckFlagDisableWildCards();
     static native int x509CheckFlagNoPartialWildCards();

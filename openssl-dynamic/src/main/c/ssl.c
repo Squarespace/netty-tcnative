@@ -1043,45 +1043,91 @@ TCN_IMPLEMENT_CALL(jint /* status */, SSL, readFromSSL)(TCN_STDARGS,
     return SSL_read(ssl_, r, rlen);
 }
 
-//
+#if !defined(OPENSSL_NO_TLS1_3) && defined(OPENSSL_IS_BORINGSSL)
+int SSL_write_early_data(SSL *s, const void *buf, size_t num, size_t *written) {
+    if (!SSL_in_early_data(ssl_)) {
+        // TODO: report error
+        return 0;
+    }
+
+    int w = SSL_write(s, buf, (int) num);
+    if (w > 0) {
+        *written = (size_t) w;
+        return 1;
+
+    } else if (w < 0) {
+        // TODO preserve error
+    }
+
+    return 0;
+}
+
+int SSL_read_early_data(SSL *s, void *buf, size_t num, size_t *readbytes) {
+    if (!SSL_in_early_data(ssl_)) {
+        return SSL_READ_EARLY_DATA_FINISH;
+    }
+
+    int r = SSL_read(s, buf, (int) num);
+    if (r > 0) {
+        *readbytes = (size_t) r;
+        return SSL_READ_EARLY_DATA_SUCCESS;
+
+    } else if (r < 0) {
+        // TODO preserve error
+    }
+
+    return SSL_READ_EARLY_DATA_ERROR;
+}
+#endif
+
+// Write up to wlen bytes of application data to the ssl BIO (encrypt)
 TCN_IMPLEMENT_CALL(jlong /* status | written */, SSL, writeEarlyDataToSSL)(TCN_STDARGS,
                                                         jlong ssl /* SSL * */,
                                                         jlong wbuf /* char * */,
                                                         jint wlen /* sizeof(wbuf) - 1 */) {
     SSL *ssl_ = J2P(ssl, SSL *);
     void *w = J2P(wbuf, void *);
-    size_t written = 0;
 
     TCN_CHECK_NULL(ssl_, ssl, 0);
     TCN_CHECK_NULL(w, wbuf, 0);
 
     UNREFERENCED_STDARGS;
 
+#ifndef OPENSSL_NO_TLS1_3
+    size_t written = 0;
     jlong status = (jlong) SSL_write_early_data(ssl_, w, wlen, &written);
     return (status << 32L) | (jlong) written;
+#else
+    return 0L;
+#endif // OPENSSL_NO_TLS1_3
 }
 
-//
+
+// Read up to rlen bytes of application early data from the given SSL BIO (decrypt)
 TCN_IMPLEMENT_CALL(jlong /* status | readbytes */, SSL, readEarlyDataFromSSL)(TCN_STDARGS,
                                                         jlong ssl /* SSL * */,
                                                         jlong rbuf /* char * */,
                                                         jint rlen /* sizeof(rbuf) - 1 */) {
     SSL *ssl_ = J2P(ssl, SSL *);
     void *r = J2P(rbuf, void *);
-    size_t readbytes = 0;
 
     TCN_CHECK_NULL(ssl_, ssl, 0);
     TCN_CHECK_NULL(r, rbuf, 0);
 
     UNREFERENCED_STDARGS;
 
+#ifndef OPENSSL_NO_TLS1_3
+    size_t readbytes = 0;
     jlong status = (jlong) SSL_read_early_data(ssl_, r, rlen, &readbytes);
     return (status << 32L) | (jlong) readbytes;
+#else
+    return 0L;
+#endif // OPENSSL_NO_TLS1_3
 }
 
 //
 TCN_IMPLEMENT_CALL(jint /* status */, SSL, getEarlyDataStatus)(TCN_STDARGS,
-                                                        jlong ssl /* SSL * */) {
+                                                         jlong ssl /* SSL * */) {
 
     SSL *ssl_ = J2P(ssl, SSL *);
 
@@ -1089,7 +1135,53 @@ TCN_IMPLEMENT_CALL(jint /* status */, SSL, getEarlyDataStatus)(TCN_STDARGS,
 
     UNREFERENCED_STDARGS;
 
+#ifndef OPENSSL_NO_TLS1_3
+#ifdef OPENSSL_IS_BORINGSSL
+    return SSL_early_data_accepted(ssl_) == 1 ? SSL_EARLY_DATA_ACCEPTED : SSL_EARLY_DATA_REJECTED;
+#else
     return SSL_get_early_data_status(ssl_);
+#endif // OPENSSL_IS_BORINGSSL
+#else
+    return 0;
+#endif // OPENSSL_NO_TLS1_3
+}
+
+// TODO: Needed?
+TCN_IMPLEMENT_CALL(jboolean, SSL, isInEarlyData)(TCN_STDARGS, jlong ssl /* SSL * */) {
+
+    SSL *ssl_ = J2P(ssl, SSL *);
+
+    TCN_CHECK_NULL(ssl_, ssl, JNI_FALSE);
+
+    UNREFERENCED_STDARGS;
+
+#ifndef OPENSSL_NO_TLS1_3
+#ifdef OPENSSL_IS_BORINGSSL
+    return SSL_in_early_data(ssl_) == 1 ? JNI_TRUE : JNI_FALSE;
+#else
+    // BoringSSL's doc says SSL_in_early_data(...) is the equivalent of SSL_in_init(...)
+    // https://github.com/google/boringssl/blob/9113e0996fd445ce187ae9dfeabfc95805b947a2/include/openssl/ssl.h#L3175
+    return SSL_in_init(ssl_) == 1 ? JNI_TRUE : JNI_FALSE;
+#endif // OPENSSL_IS_BORINGSSL
+#else
+    return JNI_FALSE;
+#endif // OPENSSL_NO_TLS1_3
+}
+
+// TODO: Needed?
+TCN_IMPLEMENT_CALL(void, SSL, resetRejectedEarlyData)(TCN_STDARGS, jlong ssl /* SSL * */) {
+
+    SSL *ssl_ = J2P(ssl, SSL *);
+
+    TCN_CHECK_NULL(ssl_, ssl, /* void */);
+
+    UNREFERENCED_STDARGS;
+
+#ifndef OPENSSL_NO_TLS1_3
+#ifdef OPENSSL_IS_BORINGSSL
+    SSL_reset_early_data_reject(ssl_);
+#endif // OPENSSL_IS_BORINGSSL
+#endif // OPENSSL_NO_TLS1_3
 }
 
 // Get the shutdown status of the engine
@@ -2380,6 +2472,8 @@ static const JNINativeMethod method_table[] = {
   { TCN_METHOD_TABLE_ENTRY(writeEarlyDataToSSL, (JJI)J, SSL) },
   { TCN_METHOD_TABLE_ENTRY(readEarlyDataFromSSL, (JJI)J, SSL) },
   { TCN_METHOD_TABLE_ENTRY(getEarlyDataStatus, (J)I, SSL) },
+  { TCN_METHOD_TABLE_ENTRY(isInEarlyData, (J)Z, SSL) },
+  { TCN_METHOD_TABLE_ENTRY(resetRejectedEarlyData, (J)V, SSL) },
   { TCN_METHOD_TABLE_ENTRY(getShutdown, (J)I, SSL) },
   { TCN_METHOD_TABLE_ENTRY(setShutdown, (JI)V, SSL) },
   { TCN_METHOD_TABLE_ENTRY(freeSSL, (J)V, SSL) },

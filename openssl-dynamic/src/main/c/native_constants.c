@@ -184,14 +184,6 @@ TCN_IMPLEMENT_CALL(jint, NativeStaticallyReferencedJniMethods, sslEarlyDataNotSe
 #endif // SSL_EARLY_DATA_NOT_SENT
 }
 
-TCN_IMPLEMENT_CALL(jint, NativeStaticallyReferencedJniMethods, sslErrorEarlyDataRejected)(TCN_STDARGS) {
-#ifdef SSL_ERROR_EARLY_DATA_REJECTED
-    return SSL_ERROR_EARLY_DATA_REJECTED;
-#else
-    return 0;
-#endif // SSL_ERROR_EARLY_DATA_REJECTED
-}
-
 TCN_IMPLEMENT_CALL(jint, NativeStaticallyReferencedJniMethods, x509CheckFlagAlwaysCheckSubject)(TCN_STDARGS) {
 #ifdef X509_CHECK_FLAG_ALWAYS_CHECK_SUBJECT
     return X509_CHECK_FLAG_ALWAYS_CHECK_SUBJECT;
@@ -573,9 +565,6 @@ static const JNINativeMethod method_table[] = {
   { TCN_METHOD_TABLE_ENTRY(sslEarlyDataAccepted, ()I, NativeStaticallyReferencedJniMethods) },
   { TCN_METHOD_TABLE_ENTRY(sslEarlyDataRejected, ()I, NativeStaticallyReferencedJniMethods) },
   { TCN_METHOD_TABLE_ENTRY(sslEarlyDataNotSent, ()I, NativeStaticallyReferencedJniMethods) },
-
-  { TCN_METHOD_TABLE_ENTRY(sslErrorEarlyDataRejected, ()I, NativeStaticallyReferencedJniMethods) },
-
   { TCN_METHOD_TABLE_ENTRY(x509CheckFlagAlwaysCheckSubject, ()I, NativeStaticallyReferencedJniMethods) },
   { TCN_METHOD_TABLE_ENTRY(x509CheckFlagDisableWildCards, ()I, NativeStaticallyReferencedJniMethods) },
   { TCN_METHOD_TABLE_ENTRY(x509CheckFlagNoPartialWildCards, ()I, NativeStaticallyReferencedJniMethods) },

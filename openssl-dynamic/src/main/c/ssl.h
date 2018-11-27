@@ -19,9 +19,9 @@
 #if !defined(OPENSSL_NO_TLS1_3) && defined(OPENSSL_IS_BORINGSSL)
 
 //
-// The OpenSSL and BoringSSL APIs for TLS 1.3 Early Data are slightly
-// different. To make things a bit easier I'm re-implementing the given
-// OpenSSL API in BoringSSL using boring's primitives.
+// The OpenSSL and BoringSSL APIs for Early Data are slightly different
+// and neither is particularly intuitive. To make things easier we're going
+// to "emulate" the OpenSSL API in BoringSSL.
 //
 
 #ifndef SSL_READ_EARLY_DATA_ERROR

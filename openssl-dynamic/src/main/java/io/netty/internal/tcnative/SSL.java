@@ -114,9 +114,7 @@ public final class SSL {
     public static final int SSL_EARLY_DATA_ACCEPTED = sslEarlyDataAccepted();
     public static final int SSL_EARLY_DATA_REJECTED = sslEarlyDataRejected();
     public static final int SSL_EARLY_DATA_NOT_SENT = sslEarlyDataNotSent();
-    
-    // https://github.com/google/boringssl/blob/9113e0996fd445ce187ae9dfeabfc95805b947a2/include/openssl/ssl.h#L527
-    public static final int SSL_ERROR_EARLY_DATA_REJECTED = sslErrorEarlyDataRejected();
+
     
     /* Return OpenSSL version number */
     public static native int version();

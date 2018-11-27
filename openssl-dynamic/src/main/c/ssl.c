@@ -1154,6 +1154,7 @@ TCN_IMPLEMENT_CALL(jint /* status */, SSL, getEarlyDataStatus)(TCN_STDARGS,
 
 #ifndef OPENSSL_NO_TLS1_3
 #ifdef OPENSSL_IS_BORINGSSL
+    // NOTE: We have no way of signaling SSL_EARLY_DATA_NOT_SENT from BoringSSL
     return SSL_early_data_accepted(ssl_) == 1 ? SSL_EARLY_DATA_ACCEPTED : SSL_EARLY_DATA_REJECTED;
 #else
     return SSL_get_early_data_status(ssl_);

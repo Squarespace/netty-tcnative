@@ -444,26 +444,37 @@ public final class SSLContext {
 
     /**
      * Sets the SSL_CTX_set_max_early_data and returns {@code true} on success.
+     * 
+     * NOTE: The {@code maxEarlyData} argument has no meaning for BoringSSL other than values
+     * greater than zero will enable Early Data and other values will disable it.
      */
     public static native boolean setMaxEarlyData(long ctx, long maxEarlyData);
 
     /**
      * Returns the SSL_CTX_get_max_early_data.
+     * 
+     * NOTE: BoringSSL will always return zero.
      */
     public static native long getMaxEarlyData(long ctx);
     
     /**
      * Sets the SSL_CTX_set_recv_max_early_data and returns {@code true} on success.
+     * 
+     * NOTE: This doesn't work in BoringSSL and the method will always return {@code false}.
      */
     public static native boolean setRecvMaxEarlyData(long ctx, long maxEarlyData);
 
     /**
      * Returns the SSL_CTX_get_recv_max_early_data
+     * 
+     * NOTE: BoringSSL will always return zero.
      */
     public static native long getRecvMaxEarlyData(long ctx);
     
     /**
      * Sets the SSL_CTX_set_allow_early_data_cb callback.
+     * 
+     * NOTE: This doesn't work in BoringSSL and the method will always return {@code false}.
      */
     public static native boolean setAllowEarlyDataCallback(long ctx, AllowEarlyDataCallback callback);
     

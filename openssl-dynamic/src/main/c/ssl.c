@@ -31,6 +31,7 @@
 
 #include <stdbool.h>
 #include <openssl/bio.h>
+#include <openssl/err.h>
 
 #ifndef OPENSSL_NO_ENGINE
 #include <openssl/ui.h>
@@ -1046,37 +1047,53 @@ TCN_IMPLEMENT_CALL(jint /* status */, SSL, readFromSSL)(TCN_STDARGS,
 #if !defined(OPENSSL_NO_TLS1_3) && defined(OPENSSL_IS_BORINGSSL)
 int SSL_write_early_data(SSL *s, const void *buf, size_t num, size_t *written) {
     if (!SSL_in_early_data(ssl_)) {
-        // TODO: report error
+        OPENSSL_PUT_ERROR(SSL, ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
         return 0;
     }
 
     int w = SSL_write(s, buf, (int) num);
-    if (w > 0) {
-        *written = (size_t) w;
-        return 1;
+    switch (SSL_get_error(s, w)) {
+        case SSL_ERROR_NONE:
+            *written = (size_t) w;
+            return 1;
 
-    } else if (w < 0) {
-        // TODO preserve error
+        case SSL_ERROR_WANT_WRITE:
+            return 1;
+
+        case SSL_ERROR_EARLY_DATA_REJECTED:
+            SSL_reset_early_data_reject(s);
+            return 0;
+
+        default:
+            OPENSSL_PUT_ERROR(SSL, SSL_R_UNKNOWN_STATE);
+            return 0;
     }
-
-    return 0;
 }
 
 int SSL_read_early_data(SSL *s, void *buf, size_t num, size_t *readbytes) {
     if (!SSL_in_early_data(ssl_)) {
-        return SSL_READ_EARLY_DATA_FINISH;
+        //return SSL_READ_EARLY_DATA_FINISH;
+        OPENSSL_PUT_ERROR(SSL, ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
+        return SSL_READ_EARLY_DATA_ERROR;
     }
 
     int r = SSL_read(s, buf, (int) num);
-    if (r > 0) {
-        *readbytes = (size_t) r;
-        return SSL_READ_EARLY_DATA_SUCCESS;
+    switch (SSL_get_error(s, r)) {
+        case SSL_ERROR_NONE:
+            *readbytes = (size_t) r;
+            return SSL_READ_EARLY_DATA_SUCCESS;
 
-    } else if (r < 0) {
-        // TODO preserve error
+        case SSL_ERROR_WANT_READ:
+            return SSL_READ_EARLY_DATA_SUCCESS;
+
+        case SSL_ERROR_EARLY_DATA_REJECTED:
+            SSL_reset_early_data_reject(s);
+            return SSL_READ_EARLY_DATA_ERROR;
+
+        default:
+            OPENSSL_PUT_ERROR(SSL, SSL_R_UNKNOWN_STATE);
+            return SSL_READ_EARLY_DATA_ERROR;
     }
-
-    return SSL_READ_EARLY_DATA_ERROR;
 }
 #endif
 
@@ -1143,44 +1160,6 @@ TCN_IMPLEMENT_CALL(jint /* status */, SSL, getEarlyDataStatus)(TCN_STDARGS,
 #endif // OPENSSL_IS_BORINGSSL
 #else
     return 0;
-#endif // OPENSSL_NO_TLS1_3
-}
-
-// TODO: Needed?
-TCN_IMPLEMENT_CALL(jboolean, SSL, isInEarlyData)(TCN_STDARGS, jlong ssl /* SSL * */) {
-
-    SSL *ssl_ = J2P(ssl, SSL *);
-
-    TCN_CHECK_NULL(ssl_, ssl, JNI_FALSE);
-
-    UNREFERENCED_STDARGS;
-
-#ifndef OPENSSL_NO_TLS1_3
-#ifdef OPENSSL_IS_BORINGSSL
-    return SSL_in_early_data(ssl_) == 1 ? JNI_TRUE : JNI_FALSE;
-#else
-    // BoringSSL's doc says SSL_in_early_data(...) is the equivalent of SSL_in_init(...)
-    // https://github.com/google/boringssl/blob/9113e0996fd445ce187ae9dfeabfc95805b947a2/include/openssl/ssl.h#L3175
-    return SSL_in_init(ssl_) == 1 ? JNI_TRUE : JNI_FALSE;
-#endif // OPENSSL_IS_BORINGSSL
-#else
-    return JNI_FALSE;
-#endif // OPENSSL_NO_TLS1_3
-}
-
-// TODO: Needed?
-TCN_IMPLEMENT_CALL(void, SSL, resetRejectedEarlyData)(TCN_STDARGS, jlong ssl /* SSL * */) {
-
-    SSL *ssl_ = J2P(ssl, SSL *);
-
-    TCN_CHECK_NULL(ssl_, ssl, /* void */);
-
-    UNREFERENCED_STDARGS;
-
-#ifndef OPENSSL_NO_TLS1_3
-#ifdef OPENSSL_IS_BORINGSSL
-    SSL_reset_early_data_reject(ssl_);
-#endif // OPENSSL_IS_BORINGSSL
 #endif // OPENSSL_NO_TLS1_3
 }
 
@@ -2472,8 +2451,6 @@ static const JNINativeMethod method_table[] = {
   { TCN_METHOD_TABLE_ENTRY(writeEarlyDataToSSL, (JJI)J, SSL) },
   { TCN_METHOD_TABLE_ENTRY(readEarlyDataFromSSL, (JJI)J, SSL) },
   { TCN_METHOD_TABLE_ENTRY(getEarlyDataStatus, (J)I, SSL) },
-  { TCN_METHOD_TABLE_ENTRY(isInEarlyData, (J)Z, SSL) },
-  { TCN_METHOD_TABLE_ENTRY(resetRejectedEarlyData, (J)V, SSL) },
   { TCN_METHOD_TABLE_ENTRY(getShutdown, (J)I, SSL) },
   { TCN_METHOD_TABLE_ENTRY(setShutdown, (JI)V, SSL) },
   { TCN_METHOD_TABLE_ENTRY(freeSSL, (J)V, SSL) },

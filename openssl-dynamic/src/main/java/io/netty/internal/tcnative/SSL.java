@@ -305,19 +305,6 @@ public final class SSL {
     public static native long readEarlyDataFromSSL(long ssl, long rbuf, int rlen);
     
     /**
-     * Returns {@code true} if the handshake has progressed enough to send or receive early data.
-     * 
-     * https://github.com/google/boringssl/blob/9113e0996fd445ce187ae9dfeabfc95805b947a2/include/openssl/ssl.h#L3217
-     */
-    public static native boolean isInEarlyData(long ssl);
-    
-    /**
-     * Resets the SSL connection's state upon receiving a {@link #SSL_EARLY_DATA_REJECTED} signal
-     * @see #getEarlyDataStatus(long)
-     */
-    public static native void resetRejectedEarlyData(long ssl);
-    
-    /**
      * SSL_get_early_data_status
      *
      * @see #SSL_EARLY_DATA_ACCEPTED

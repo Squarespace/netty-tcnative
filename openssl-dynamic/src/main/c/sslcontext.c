@@ -1334,7 +1334,7 @@ TCN_IMPLEMENT_CALL(jboolean, SSLContext, setMaxEarlyData)(TCN_STDARGS, jlong ctx
 
 #ifndef OPENSSL_NO_TLS1_3
 #ifdef OPENSSL_IS_BORINGSSL
-    SSL_CTX_set_early_data_enabled(c_ctx, (maxEarlyData > 0L) ? 1 : 0);
+    SSL_CTX_set_early_data_enabled(c->ctx, (maxEarlyData > 0L) ? 1 : 0);
     return JNI_TRUE;
 #else
     return  SSL_CTX_set_max_early_data(c->ctx, (uint32_t) maxEarlyData) == 1 ? JNI_TRUE : JNI_FALSE;

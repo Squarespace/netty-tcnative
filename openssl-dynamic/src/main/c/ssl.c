@@ -1045,8 +1045,8 @@ TCN_IMPLEMENT_CALL(jint /* status */, SSL, readFromSSL)(TCN_STDARGS,
 }
 
 #if !defined(OPENSSL_NO_TLS1_3) && defined(OPENSSL_IS_BORINGSSL)
-int SSL_write_early_data(SSL *s, const void *buf, size_t num, size_t *written) {
-    if (!SSL_in_early_data(ssl_)) {
+static int SSL_write_early_data(SSL *s, const void *buf, size_t num, size_t *written) {
+    if (!SSL_in_early_data(s)) {
         OPENSSL_PUT_ERROR(SSL, ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
         return 0;
     }
@@ -1070,8 +1070,8 @@ int SSL_write_early_data(SSL *s, const void *buf, size_t num, size_t *written) {
     }
 }
 
-int SSL_read_early_data(SSL *s, void *buf, size_t num, size_t *readbytes) {
-    if (!SSL_in_early_data(ssl_)) {
+static int SSL_read_early_data(SSL *s, void *buf, size_t num, size_t *readbytes) {
+    if (!SSL_in_early_data(s)) {
         //return SSL_READ_EARLY_DATA_FINISH;
         OPENSSL_PUT_ERROR(SSL, ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
         return SSL_READ_EARLY_DATA_ERROR;

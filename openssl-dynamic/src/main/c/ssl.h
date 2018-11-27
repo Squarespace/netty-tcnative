@@ -48,8 +48,6 @@
 #define SSL_EARLY_DATA_ACCEPTED     2
 #endif
 
-int SSL_write_early_data(SSL *s, const void *buf, size_t num, size_t *written);
-int SSL_read_early_data(SSL *s, void *buf, size_t num, size_t *readbytes);
 #endif
 
 // JNI initialization hooks. Users of this file are responsible for calling these in the JNI_OnLoad and JNI_OnUnload methods.

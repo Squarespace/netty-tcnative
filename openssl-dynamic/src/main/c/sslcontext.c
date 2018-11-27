@@ -77,12 +77,14 @@ static apr_status_t ssl_context_cleanup(void *data)
         }
         c->sni_hostname_matcher_method = NULL;
 
+#if !defined(OPENSSL_NO_TLS1_3) && !defined(OPENSSL_IS_BORINGSSL)
         if (c->allow_early_data_callback != NULL) {
             tcn_get_java_env(&e);
             (*e)->DeleteGlobalRef(e, c->allow_early_data_callback);
             c->allow_early_data_callback = NULL;
         }
         c->allow_early_data_callback_method = NULL;
+#endif // OPENSSL_NO_TLS1_3
 
         if (c->next_proto_data != NULL) {
             OPENSSL_free(c->next_proto_data);
@@ -1426,7 +1428,7 @@ TCN_IMPLEMENT_CALL(jboolean, SSLContext, setAllowEarlyDataCallback)(TCN_STDARGS,
             c->allow_early_data_callback = NULL;
             c->allow_early_data_callback_method = NULL;
         }
-        return;
+        return JNI_TRUE;
     }
 
     jclass clazz = (*e)->GetObjectClass(e, callback);
